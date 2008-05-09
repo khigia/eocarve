@@ -1,39 +1,111 @@
 open Ocamerl
 open Seamcarving
 
-let create_worker_process node bin =
-    let fn = Tmpfile.new_tmp_file_name "oecarv" in
-    let oc = open_out_bin fn in
-    Array.iter (output_char oc) bin;
-    flush oc;
-    close_out oc;
 
+module Energy = Sobel.Energy
+module Carving = Make(Energy)
+module BiasedEnergy = EnergyBias.Make(Energy)
+module BiasedCarving = Make(BiasedEnergy)
+
+
+let time msg f x =
+    let t0 = Sys.time() in
+    let ret = f x in
+    Trace.dbg "carve" "%s executed in %.2fs." msg (Sys.time() -. t0);
+    ret
+
+
+module Carver = struct
+    
+    type t = {
+        mutable srcfn: string option;
+        mutable dstfn: string option;
+    }
+
+    let create () = {
+        srcfn = None;
+        dstfn = None;
+    }
+
+    let set_src_data self bin =
+        let fn = Tmpfile.new_tmp_file_name "oecarving" in
+        let oc = open_out_bin fn in
+        Array.iter (output_char oc) bin;
+        flush oc;
+        close_out oc;
+        self.srcfn <- Some fn
+    
+    let set_src_file self fn =
+        self.srcfn <- Some fn
+
+    let rec _carve_h i carved =
+        if i > 0 then
+            _carve_h (i-1) (Carving.seam_carve_h carved)
+        else
+            carved
+
+    let carve_h self i dstfn =
+        let src = match self.srcfn with None -> failwith "no data source" | Some x -> x in
+        let dst = match dstfn with None -> src ^ ".carved_h.png" | Some x -> x in
+        let img = Seamcarving.load_image src in
+        if i >= img.width - 10 then failwith "Excessive horizontal downsizing.";
+        let eproc =  Energy.processor in
+        let carved = Carving.make eproc img in
+        let carved = time "Vertical carving" (_carve_h i) carved in
+        let carved = Carving.image carved in
+        Seamcarving.save_image carved dst;
+        self.dstfn <- Some dst
+        
+    let get_dst_file self =
+        self.dstfn
+
+end (* module Carver *)
+
+
+let create_worker_process node =
+    let carver = Carver.create () in
     let mbox = Enode.create_mbox node in
     let recvCB = fun msg -> match msg with
+    | Eterm.ET_tuple [|Eterm.ET_atom "set_src_file"; Eterm.ET_string fn;|] ->
+        Carver.set_src_file carver fn
+    | Eterm.ET_tuple [|Eterm.ET_atom "set_src_data"; Eterm.ET_bin b;|] ->
+        Carver.set_src_data carver b
+    | Eterm.ET_tuple [|Eterm.ET_atom "carve_h"; Eterm.ET_int i;|] ->
+        Carver.carve_h carver (Int32.to_int i) None
+    | Eterm.ET_tuple [|pid; Eterm.ET_atom "get_dst_file";|] ->
+        begin
+        match Carver.get_dst_file carver with
+        | Some fn ->
+            Enode.send node pid (Eterm.ET_tuple [|Eterm.ET_atom "ok"; Eterm.ET_string fn;|])
+        | None ->
+            Enode.send node pid (Eterm.ET_atom "no_file")
+        end
     | msg ->
         (* skip unknown message *)
-        Trace.dbg "Ex_carv" "Worker skiping unknown message: %s\n" (Eterm.to_string msg);
+        Trace.dbg "carve" "Worker skiping unknown message: %s\n" (Eterm.to_string msg);
         ()
     in
     Enode.Mbox.create_activity mbox recvCB;
     Enode.Mbox.pid mbox
 
+
 let create_main_process node name =
     let mbox = Enode.create_mbox node in
     let _ = Enode.register_mbox node mbox name in
     let recvCB = fun msg -> match msg with
-    | Eterm.ET_tuple [|pid; Eterm.ET_ref r; Eterm.ET_bin b;|] ->
-        let worker = create_worker_process node b in
+    | Eterm.ET_tuple [|pid; Eterm.ET_ref r;|] ->
+        let worker = create_worker_process node in
         Enode.send node pid (Eterm.ET_tuple [|Eterm.ET_ref r; worker;|])
     | msg ->
         (* skip unknown message *)
-        Trace.dbg "Ex_carv" "Skip unknown message: %s\n" (Eterm.to_string msg);
+        Trace.dbg "carve" "Skip unknown message: %s\n" (Eterm.to_string msg);
     in
     Enode.Mbox.create_activity mbox recvCB
 
+
 let doit () =
     try
-        Trace.inf "Ex_carv" "Creating node\n";
+        Trace.inf "carve" "Creating node\n";
         let name = ref "ocaml" in
         let cookie = ref "" in
         Arg.parse
@@ -43,15 +115,16 @@ let doit () =
             ]
             ignore
             "";
-        Trace.dbg "Ex_carv" "name: %s; cookie: %s\n" !name !cookie;
+        Trace.dbg "carve" "name: %s; cookie: %s\n" !name !cookie;
         let n = Enode.create !name ~cookie:!cookie in
         let _ = Thread.sigmask Unix.SIG_BLOCK [Sys.sigint] in
         let _ = Enode.start n in
-        let _ = create_main_process n "carv" in
+        let _ = create_main_process n "eocarving" in
         let _ = Thread.wait_signal [Sys.sigint] in
         Enode.stop n
     with
         exn -> Printf.printf "ERROR:%s\n" (Printexc.to_string exn)
+
 
 let _  = doit ()
 
