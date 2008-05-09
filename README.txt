@@ -1,3 +1,3 @@
-Ocamerl example: use Ocaml seamcarving library, called from Erlang.
+Ocamerl example: Erlang API for a seamcarving library in Ocaml.
 
-Hopefuly will become a web GUI to seamcarving lib :)
+May become an Erlang Web application for seamcarving :).
