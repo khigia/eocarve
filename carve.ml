@@ -6,6 +6,7 @@ module Energy = Sobel.Energy
 module Carving = Make(Energy)
 module BiasedEnergy = EnergyBias.Make(Energy)
 module BiasedCarving = Make(BiasedEnergy)
+module Insertion = Seaminsertion.Make(Carving)
 
 
 let time msg f x =
@@ -38,21 +39,29 @@ module Carver = struct
     let set_src_file self fn =
         self.srcfn <- Some fn
 
-    let rec _carve_h i carved =
-        if i > 0 then
-            _carve_h (i-1) (Carving.seam_carve_h carved)
-        else
-            carved
+    let _seam_del img eproc n =
+        if n >= img.width - 10 then failwith "Excessive horizontal downsizing.";
+        let rec _carve_h i carved =
+            if i > 0 then
+                _carve_h (i-1) (Carving.seam_carve_h carved)
+            else
+                carved
+        in
+        let carved = Carving.make eproc img in
+        let carved = time "Horizontal carving" (_carve_h n) carved in
+        Carving.image carved
+
+    let _seam_add img eproc n =
+        let carved = Insertion.make eproc img in
+        let carved = time "Horizontal carving" (Insertion.insert_seams carved) n in
+        carved
 
     let carve_h self i dstfn =
         let src = match self.srcfn with None -> failwith "no data source" | Some x -> x in
         let dst = match dstfn with None -> src ^ ".carved_h.png" | Some x -> x in
         let img = Seamcarving.load_image src in
-        if i >= img.width - 10 then failwith "Excessive horizontal downsizing.";
-        let eproc =  Energy.processor in
-        let carved = Carving.make eproc img in
-        let carved = time "Vertical carving" (_carve_h i) carved in
-        let carved = Carving.image carved in
+        let eproc =  Energy.processor in (* biased image could be used here *)
+        let carved = if i < 0 then _seam_del img eproc (-i) else _seam_add img eproc i in
         Seamcarving.save_image carved dst;
         self.dstfn <- Some dst
         
