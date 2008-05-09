@@ -1,0 +1,74 @@
+[Initial import.
+Mauricio Fernandez <mfp@acm.org>**20070905081205] 
+[seamcarving.ml: changed interface, use bigarray for cost matrix.
+Mauricio Fernandez <mfp@acm.org>**20070905090158] 
+[seamcarving.ml: put cost update code in update_cost, optimized.
+Mauricio Fernandez <mfp@acm.org>**20070905093032] 
+[build.sh: remove -verbose.
+Mauricio Fernandez <mfp@acm.org>**20070905093144] 
+[sobel.c, searmcarving.ml: added fast_update_cost, 3x faster but buggy.
+Mauricio Fernandez <mfp@acm.org>**20070905103622] 
+[build.sh: simplified build.
+Mauricio Fernandez <mfp@acm.org>**20070905103705] 
+[sobel.c: remove debug printfs.
+Mauricio Fernandez <mfp@acm.org>**20070905105856] 
+[sobel.c, seamcarving.ml: removed C code, the OCaml sobel is not much slower and it doesn't matter anyway.
+Mauricio Fernandez <mfp@acm.org>**20070905141437] 
+[seamcarving.ml: cleanup.
+Mauricio Fernandez <mfp@acm.org>**20070905145412] 
+[seamcarving.ml: no need for bigarray anymore, use plain int arrays.
+Mauricio Fernandez <mfp@acm.org>**20070905152240] 
+[seamcarving.ml: further cleanup.
+Mauricio Fernandez <mfp@acm.org>**20070905153614] 
+[seamcarving.ml: further uopt in recompute_energy_h.
+Mauricio Fernandez <mfp@acm.org>**20070905193034] 
+[seamcarving.ml, sobel.ml: SeamCarving.Make is a functor parameterized over an energy computation (Sobel.Energy).
+Mauricio Fernandez <mfp@acm.org>**20070906082125] 
+[OMakefile, OMakeroot: new build system.
+Mauricio Fernandez <mfp@acm.org>**20070906082253] 
+[sobel.ml: moved functions and types around so they're not exported.
+Mauricio Fernandez <mfp@acm.org>**20070906095322] 
+[gradientHist.ml: HoG-based energy.
+Mauricio Fernandez <mfp@acm.org>**20070906095428] 
+[seamcarving.ml: avoid caml_modify in seam_carve_h with Obj.magic; 70% faster.
+Mauricio Fernandez <mfp@acm.org>**20070907154657] 
+[seamcarving.ml: minor cleaning.
+Mauricio Fernandez <mfp@acm.org>**20070907155335] 
+[carve.ml: show help if no cmdline args given.
+Mauricio Fernandez <mfp@acm.org>**20070908135503] 
+[seamcarving.ml, carve.ml: changed image saving interface, added vertical scaling, better cmdline iface.
+Mauricio Fernandez <mfp@acm.org>**20070930103631] 
+[OMakefile: simplified.
+Mauricio Fernandez <mfp@acm.org>**20070930105925] 
+[build.sh: script to build using ocamlbuild.
+Mauricio Fernandez <mfp@acm.org>**20070930110128] 
+[carve.ml: better help msg, fixed horiz range checking.
+Mauricio Fernandez <mfp@acm.org>**20070930110919] 
+[carve.ml: better error message when too many pixels are to be removed.
+Mauricio Fernandez <mfp@acm.org>**20070930114127] 
+[README.txt, LICENSE: added readme and copyright+license info.
+Mauricio Fernandez <mfp@acm.org>**20070930114309] 
+[seamcarving.ml (update_cost): avoid some unnecessary indirections.
+Mauricio Fernandez <mfp@acm.org>**20071001090716] 
+[carve.ml, seamcarving.ml: minimal cleaning.
+Mauricio Fernandez <mfp@acm.org>**20071001091636] 
+[energyBias.ml, seamcarving.ml, carve.ml: minor change in ENERGY_COMPUTATION, added energy biasing.
+Mauricio Fernandez <mfp@acm.org>**20071001224556] 
+[seamcarving.ml, seaminsertion.ml, expand.ml: implemented seam insertion.
+Mauricio Fernandez <mfp@acm.org>**20071023133212] 
+[seamcarving.ml (seam_carve_h_aux): check width before proceeding.
+Mauricio Fernandez <mfp@acm.org>**20071023174800] 
+[insert.ml: better cmdline tool for seam insertion, similar to carve.ml.
+Mauricio Fernandez <mfp@acm.org>**20071023181011] 
+[insert.ml, carve.ml, cmdline_resizer.ml: cmdline handling reuse with a functor.
+Mauricio Fernandez <mfp@acm.org>**20071023183650] 
+[expand.ml, OMakefile: rmed expand.ml.
+Mauricio Fernandez <mfp@acm.org>**20071023183926] 
+[Moved insert.ml to expand.ml, updated OMakefile.
+Mauricio Fernandez <mfp@acm.org>**20071023184449] 
+[build.sh: build expand.native.
+Mauricio Fernandez <mfp@acm.org>**20071023184532] 
+[carve.ml: very minor cleanup.
+Mauricio Fernandez <mfp@acm.org>**20071023184545] 
+[cmdline_resizer.ml: typo in synopsis.
+Mauricio Fernandez <mfp@acm.org>**20071023184743] 
