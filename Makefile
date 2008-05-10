@@ -9,3 +9,5 @@ build:
 .PHONY: clean
 clean:
 	ocamlbuild -clean
+	rm -vf test/*_add*.jpg
+	rm -vf test/*_del*.jpg

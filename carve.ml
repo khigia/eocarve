@@ -74,11 +74,14 @@ end (* module Carver *)
 let create_worker_process node =
     let carver = Carver.create () in
     let mbox = Enode.create_mbox node in
+    let self = Enode.Mbox.pid mbox in
     let recvCB = fun msg -> match msg with
     | Eterm.ET_tuple [|Eterm.ET_atom "set_src_file"; Eterm.ET_string fn;|] ->
         Carver.set_src_file carver fn
     | Eterm.ET_tuple [|Eterm.ET_atom "set_src_data"; Eterm.ET_bin b;|] ->
         Carver.set_src_data carver b
+    | Eterm.ET_tuple [|Eterm.ET_atom "carve_h"; Eterm.ET_int i; Eterm.ET_string dstfn;|] ->
+        Carver.carve_h carver (Int32.to_int i) (Some dstfn)
     | Eterm.ET_tuple [|Eterm.ET_atom "carve_h"; Eterm.ET_int i;|] ->
         Carver.carve_h carver (Int32.to_int i) None
     | Eterm.ET_tuple [|pid; Eterm.ET_atom "get_dst_file";|] ->
@@ -89,14 +92,15 @@ let create_worker_process node =
         | None ->
             Enode.send node pid (Eterm.ET_atom "no_file")
         end
+    | Eterm.ET_tuple [|pid; Eterm.ET_atom "stop";|] ->
+        Enode.send node pid (Eterm.ET_tuple [|self; Eterm.ET_atom "stopped";|])
     | msg ->
         (* skip unknown message *)
         Trace.dbg "carve" "Worker skiping unknown message: %s\n" (Eterm.to_string msg);
         ()
     in
     Enode.Mbox.create_activity mbox recvCB;
-    Enode.Mbox.pid mbox
-
+    self
 
 let create_main_process node name =
     let mbox = Enode.create_mbox node in
